@@ -324,10 +324,58 @@ pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #
 ${(S.history || []).length ? `<h2>Earlier attempts</h2><table><tr><th>Attempt</th><th>Date</th><th>Started</th><th>Submitted</th><th>Mark</th></tr>${S.history.map((h) => `<tr><td>${h.attempt}</td><td>${new Date(h.startedAt).toLocaleDateString("en-GB")}</td><td>${hhmm(h.startedAt)}</td><td>${hhmm(h.submittedAt)}</td><td class="n">${h.score == null ? "not marked" : h.score + " / " + h.total}</td></tr>`).join("")}</table>` : ""}<h2>Question by question</h2><table><tr><th>Question</th><th>Spec</th><th>Mark</th><th>How marked</th><th>Answer</th></tr>${rows}</table>
 <p class="note">Self-marked questions were marked by the student against the OCR mark scheme. Report generated ${new Date().toLocaleString("en-GB")}.</p></body></html>`;
   }
-  function download() {
-    const blob = new Blob([buildReport()], { type: "text/html" }), a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = `${P.id}-${(S.name || "report").trim().replace(/[^a-z0-9]+/gi, "-")}${(S.attempt || 1) > 1 ? "-attempt-" + S.attempt : ""}.html`;
+  const fileBase = () => `${P.id}-${(S.name || "report").trim().replace(/[^a-z0-9]+/gi, "-")}${(S.attempt || 1) > 1 ? "-attempt-" + S.attempt : ""}`;
+  function saveBlob(blob, name) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  // The PDF's built-in fonts only cover Western European characters, so swap the common extras and drop the rest.
+  const pdfText = (t) => String(t ?? "").replace(/π/g, "pi").replace(/[≥]/g, ">=").replace(/[≤]/g, "<=").replace(/≠/g, "!=").replace(/[→⇒]/g, "->").replace(/×/g, "x").replace(/\t/g, "    ")
+    .replace(/[^\n\r\x20-\x7E\xA0-\xFF‘’“”–—…•€]/g, "?").replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/…/g, "...").replace(/•/g, "-");
+  function answerText(p) {
+    const tr = p.fields.some((f) => /_x\d+$/.test(f)) ? p.fields.filter((f) => /_[xyo]\d+$/.test(f)) : [];
+    if (tr.length) {                                 // trace table: one line per row
+      const pre = tr[0].replace(/_[xyo]\d+$/, ""), n = Math.max(...tr.map((f) => +f.match(/(\d+)$/)[1])), lines = [];
+      for (let r = 1; r <= n; r++) { const v = ["x", "y", "o"].map((c) => (S.answers[`${pre}_${c}${r}`] ?? "").trim()); if (v.some(Boolean)) lines.push(`x: ${v[0] || "-"}   y: ${v[1] || "-"}   output: ${v[2] || "-"}`); }
+      return lines.join("\n") || "No answer";
+    }
+    const vals = p.fields.map((f) => (S.answers[f] ?? "").replace(/\s+$/, "")).filter((v) => v.trim() && !(p.fields.length === 1 && !answered(p.fields[0])));
+    return vals.join(p.fields.some((f) => editors[f]) || vals.some((v) => v.includes("\n")) ? "\n\n" : "\n") || "No answer";
+  }
+  function downloadPdf() {
+    if (!(window.jspdf && window.jspdf.jsPDF)) { saveBlob(new Blob([buildReport()], { type: "text/html" }), fileBase() + ".html"); return; }
+    const marked = !!M, R = marked ? renderAllMarks() : null, doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
+    const W = doc.internal.pageSize.getWidth(), L = 40, navy = [10, 27, 46], gold = [200, 155, 60];
+    doc.setFillColor(...navy); doc.rect(0, 0, W, 74, "F"); doc.setFillColor(...gold); doc.rect(0, 74, W, 4, "F");
+    doc.setTextColor(255); doc.setFont("times", "normal"); doc.setFontSize(17); doc.text(pdfText(P.title), L, 34);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.text(pdfText(P.subtitle + (marked ? " · marked report" : " · answers (not yet marked)")), L, 54);
+    const used = Math.round((S.submittedAt - S.startedAt) / 60000), d = new Date(S.startedAt);
+    const info = [["Name", S.name], ["Class", S.cls], ["Attempt", String(S.attempt || 1)], ["Date", d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })],
+      ["Started", hhmm(S.startedAt)], ["Submitted", `${hhmm(S.submittedAt)} (${S.how === "time" ? "time ran out" : "by student"})`], ["Time used", `${used} of ${S.durationMin} minutes${S.extra ? " (extra time)" : ""}`]];
+    doc.autoTable({ startY: 92, margin: { left: L, right: L }, theme: "plain", styles: { fontSize: 10, cellPadding: 2.5, textColor: 30 }, columnStyles: { 0: { fontStyle: "bold", cellWidth: 80, textColor: [138, 101, 32] } }, body: info.map(([k, v]) => [k, pdfText(v)]) });
+    let y = doc.lastAutoTable.finalY + 16;
+    const head = { fillColor: navy, textColor: 255, fontStyle: "bold", fontSize: 9 };
+    if (marked) {
+      doc.setTextColor(...navy); doc.setFont("times", "normal"); doc.setFontSize(26); doc.text(`${R.tot.all} / ${P.total}   (${Math.round((R.tot.all / P.total) * 100)}%)`, L, y + 14); y += 28;
+      doc.autoTable({ startY: y, margin: { left: L, right: L }, tableWidth: 300, headStyles: head, styles: { fontSize: 9.5, cellPadding: 4 }, head: [["Specification area", "Marks"]], body: Object.keys(R.tot.spec).sort().map((k) => [R.names[k] || k, `${R.tot.spec[k].got} / ${R.tot.spec[k].max}`]) });
+      y = doc.lastAutoTable.finalY + 14;
+      if ((S.history || []).length) { doc.autoTable({ startY: y, margin: { left: L, right: L }, tableWidth: 300, headStyles: head, styles: { fontSize: 9.5, cellPadding: 4 }, head: [["Earlier attempt", "Date", "Mark"]], body: S.history.map((h) => [h.attempt, new Date(h.startedAt).toLocaleDateString("en-GB"), h.score == null ? "not marked" : `${h.score} / ${h.total}`]) }); y = doc.lastAutoTable.finalY + 14; }
+    }
+    const how = (p, r) => { const T = r.code && S.tests[r.code.pt.field];
+      return (r.code ? (T && T.done ? `tests ${T.results.filter((x) => x.ok).length}/${T.results.length}` + (T.allOk ? "" : ", self-marked") : "self-marked") : r.self ? (r.rows.some((x) => x.k === "auto") ? "auto + self" : "self-marked") : "auto") + (S.query[p.id] ? "\nCHECK REQUESTED" : ""); };
+    const isCode = (p) => p.fields.some((f) => editors[f]) || /^(2a|3|8bi|8c)$/.test(p.id);
+    const body = marked ? R.per.map(({ p, R: r }) => [p.label, `${r.score} / ${r.max}`, how(p, r), pdfText(answerText(p))]) : parts.map((p) => [p.label, `[${p.marks}]`, pdfText(answerText(p))]);
+    const ai = marked ? 3 : 2;
+    doc.autoTable({ startY: y, margin: { left: L, right: L, bottom: 40 }, headStyles: head, styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak", valign: "top", lineColor: [227, 232, 239], lineWidth: 0.5 }, rowPageBreak: "auto",
+      head: [marked ? ["Question", "Mark", "How marked", "Answer"] : ["Question", "Marks", "Answer"]],
+      columnStyles: marked ? { 0: { cellWidth: 54, fontStyle: "bold" }, 1: { cellWidth: 44, fontStyle: "bold" }, 2: { cellWidth: 78 } } : { 0: { cellWidth: 54, fontStyle: "bold" }, 1: { cellWidth: 44 } }, body,
+      didParseCell: (c) => { if (c.section !== "body") return; const p = (marked ? R.per[c.row.index].p : parts[c.row.index]);
+        if (c.column.index === ai) { if (isCode(p) || /^(x: )/.test(c.cell.raw)) { c.cell.styles.font = "courier"; c.cell.styles.fontSize = 8.5; } if (c.cell.raw === "No answer") { c.cell.styles.fontStyle = "italic"; c.cell.styles.textColor = 120; } }
+        if (marked && c.column.index === 2 && S.query[p.id]) c.cell.styles.textColor = [179, 38, 30]; } });
+    const n = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110);
+      doc.text(pdfText(`${S.name} · ${S.cls} · ${P.subtitle}`), L, doc.internal.pageSize.getHeight() - 20); doc.text(`Page ${i} of ${n}`, W - L, doc.internal.pageSize.getHeight() - 20, { align: "right" }); }
+    doc.save(fileBase() + (marked ? "" : "-answers") + ".pdf");
   }
 
   /* ---------- new attempt ---------- */
@@ -376,11 +424,11 @@ ${(S.history || []).length ? `<h2>Earlier attempts</h2><table><tr><th>Attempt</t
     $("#relbtn").addEventListener("click", () => tryRelease($("#relCode").value));
     $("#relCode").addEventListener("keydown", (e) => { if (e.key === "Enter") tryRelease($("#relCode").value); });
     $("#rerun").addEventListener("click", () => runAllTests(true));
-    $("#dl").addEventListener("click", download);
+    $("#dl").addEventListener("click", downloadPdf);
+    $("#dlans").addEventListener("click", downloadPdf);
     $("#again").addEventListener("click", () => { $("#againmodal").hidden = false; $("#againcancel").focus(); });
     $("#againcancel").addEventListener("click", () => { $("#againmodal").hidden = true; });
     $("#againconfirm").addEventListener("click", newAttempt);
-    $("#print").addEventListener("click", () => { const w = window.open("", "_blank"); if (w) { w.document.write(buildReport()); w.document.close(); w.focus(); w.print(); } });
     if (S.code && S.startedAt) { START = await openStart(S.code); if (START) { showExam(); return; } }
     if (S.name) { $("#stuName").value = S.name; $("#stuClass").value = S.cls || ""; }
     if ((S.attempt || 1) > 1) $("#gatenote").textContent = `This will be attempt ${S.attempt}. Enter the start code to begin; the timer starts again from the full time.`;

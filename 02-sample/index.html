@@ -192,12 +192,13 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
         <p>When your teacher gives you the <b>release code</b>, enter it here to mark your paper.</p>
         <div class="relrow"><input id="relCode" autocomplete="off" spellcheck="false" aria-label="Release code"><button class="btn" id="relbtn" type="button">Mark my paper</button></div>
         <p class="msg" id="relmsg" role="alert"></p>
+        <p>You can download your answers now to upload to your teacher. <button class="btn ghost" id="dlans" type="button">Download my answers (PDF)</button></p>
       </div>
       <div id="results" hidden>
         <div id="total"></div>
         <div id="breakdown"></div>
-        <p>Scroll down to see the mark scheme under each question. Tick the points you earned on the questions you mark yourself, then download your report and hand it in on Teams.</p>
-        <div class="relrow"><button class="btn gold" id="dl" type="button">Download my report</button><button class="btn ghost" id="print" type="button">Print or save as PDF</button><button class="btn ghost" id="rerun" type="button">Run the unit tests again</button><span id="csstatus" role="status"></span></div>
+        <p>Scroll down to see the mark scheme under each question. Tick the points you earned on the questions you mark yourself, then download your report as a PDF and upload it to your teacher.</p>
+        <div class="relrow"><button class="btn gold" id="dl" type="button">Download my report (PDF)</button><button class="btn ghost" id="rerun" type="button">Run the unit tests again</button><span id="csstatus" role="status"></span></div>
         <p class="againrow">Want another go? <button class="btn ghost" id="again" type="button">Start a new attempt</button></p>
       </div>
     </div>
@@ -218,6 +219,8 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
 
 <script src="data.js"></script>
 <script src="vendor/codemirror/codemirror.bundle.js"></script>
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
