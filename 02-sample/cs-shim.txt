@@ -1,0 +1,29 @@
+
+static class Console
+{
+    static readonly Queue<string> __in = new Queue<string>(__STDIN__);
+    public static string ReadLine() { return __in.Count > 0 ? __in.Dequeue() : null; }
+    public static int Read() { return -1; }
+    public static void WriteLine() { System.Console.WriteLine(""); }
+    public static void WriteLine(object value) { System.Console.WriteLine(value == null ? "" : System.Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)); }
+    public static void WriteLine(string value) { System.Console.WriteLine(value ?? ""); }
+    public static void WriteLine(string format, params object[] args) { System.Console.WriteLine(string.Format(format, args)); }
+    public static void Write(object value) { System.Console.Out.Write(value == null ? "" : System.Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)); }
+    public static void Write(string value) { System.Console.Out.Write(value ?? ""); }
+    public static void Write(string format, params object[] args) { System.Console.Out.Write(string.Format(format, args)); }
+    public static void Clear() { }
+    public static char ReadKey() { return ' '; }
+    public static char ReadKey(bool intercept) { return ' '; }
+    public static string Title { get; set; }
+}
+static class Convert
+{
+    public static int ToInt32(object v) { return System.Convert.ToInt32(v); }
+    public static long ToInt64(object v) { return System.Convert.ToInt64(v); }
+    public static double ToDouble(object v) { return System.Convert.ToDouble(v, System.Globalization.CultureInfo.InvariantCulture); }
+    public static float ToSingle(object v) { return (float)System.Convert.ToDouble(v, System.Globalization.CultureInfo.InvariantCulture); }
+    public static decimal ToDecimal(object v) { return System.Convert.ToDecimal(v, System.Globalization.CultureInfo.InvariantCulture); }
+    public static bool ToBoolean(object v) { return System.Convert.ToBoolean(v); }
+    public static char ToChar(object v) { return System.Convert.ToChar(v); }
+    public static string ToString(object v) { return v == null ? "" : System.Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture); }
+}

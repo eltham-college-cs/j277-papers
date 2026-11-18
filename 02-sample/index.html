@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Exam paper</title>
+<link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+<style>
+:root{--navy9:#0A1B2E;--navy7:#163351;--navy5:#2A5A8C;--navy1:#D7E3EF;--gold5:#C89B3C;--gold3:#E3C783;--gold7:#8A6520;--paper:#F7F8FA;--ink:#1A1D21;--muted:#555D68;--line:#E3E8EF;--frame:#B9C3CF;--ok:#1F7A4D;--okbg:#E6F4EC;--bad:#B3261E;--badbg:#FCE9E7;--warn:#8A5A00;--warnbg:#FDF1D9;--mono:Menlo,Consolas,"Liberation Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:Georgia,serif;color:var(--navy9);font-weight:400;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+header.top{background:var(--navy9);color:#fff;padding:22px 0 24px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--gold3);text-transform:uppercase}
+header.top h1{color:#fff;font-size:clamp(26px,4.4vw,40px);margin:6px 0 6px;line-height:1.15}
+header.top p{color:var(--navy1);margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:#EEF2F7;border-radius:4px;padding:1px 5px}
+
+/* start screen */
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:22px 0}
+.card h2{font-size:26px;margin-bottom:10px}
+.idrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}
+.idrow label,label.n,.pairs label{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--gold7);text-transform:uppercase}
+.idrow input{display:block;width:100%;margin-top:4px}
+.facts{margin:0 0 6px;padding-left:20px}
+.msg{color:var(--bad);font-weight:700;min-height:1.5em;margin:8px 0 0}
+button.btn{font:inherit;font-weight:700;border-radius:8px;padding:9px 18px;cursor:pointer;border:1px solid var(--navy9);background:var(--navy9);color:#fff}
+button.btn.ghost{background:#fff;color:var(--navy9)}
+button.btn.gold{background:var(--gold5);border-color:var(--gold5);color:var(--navy9)}
+button.btn:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--gold5);outline-offset:2px}
+
+/* sticky bar */
+#bar{position:sticky;top:0;z-index:50;background:var(--navy7);color:#fff;border-bottom:3px solid var(--gold5)}
+#bar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:8px;padding-bottom:8px}
+#timer{font:700 24px/1 var(--mono);font-variant-numeric:tabular-nums;min-width:92px}
+#bar.warn{background:#6B4A00}#bar.crit{background:#8C1D18}
+#advice,#who,#progress{font-size:14px;color:var(--navy1)}
+#bar .grow{flex:1}
+#bar button{font:inherit;font-size:14px;font-weight:700;border-radius:8px;padding:6px 12px;cursor:pointer;border:1px solid var(--gold3);background:transparent;color:#fff}
+#bar #finish{background:var(--gold5);border-color:var(--gold5);color:var(--navy9)}
+#nav{background:var(--navy9);padding:10px 0}
+#navlist{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px;cursor:pointer;border:1.5px solid var(--navy5);background:var(--navy7);color:var(--navy1)}
+.chip.done{background:var(--navy1);color:var(--navy9);border-color:var(--navy1)}
+.chip.flagged{border-color:var(--gold5);box-shadow:0 0 0 2px var(--gold5)}
+.key{font-size:12px;color:var(--navy1);margin:8px 0 0}
+
+/* paper */
+.sechead{margin:26px 0 14px;border-left:6px solid var(--gold5);padding:4px 0 4px 14px}
+.sechead h2{font-size:30px}.sechead p{margin:2px 0 0;color:var(--muted)}
+section.q{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:20px}
+section.q>header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+section.q>header h2{font-size:24px}
+.num{flex:none;width:32px;height:32px;border-radius:16px;background:var(--gold5);color:var(--navy9);text-align:center;line-height:32px;font-weight:700}
+.part{border-top:1px solid var(--line);margin-top:16px;padding-top:12px;scroll-margin-top:90px}
+.phead{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.plabel{font-weight:700;color:var(--navy9);background:var(--navy1);border-radius:6px;padding:1px 8px}
+.pmarks{font-weight:700;color:var(--muted)}
+.flag{margin-left:auto;font:inherit;font-size:13px;border-radius:999px;padding:2px 10px;border:1px solid var(--frame);background:#fff;color:var(--muted);cursor:pointer}
+.flag.on{background:var(--warnbg);border-color:var(--gold5);color:var(--warn);font-weight:700}
+.howto{color:var(--muted);font-size:15px;margin:0 0 10px}
+.fig{font-weight:700;font-size:14px;margin:4px 0 12px;color:var(--muted)}
+textarea,input.line,input.cell,input.blank,.idrow input,#relCode{font:inherit;border:1px solid var(--frame);border-radius:8px;padding:7px 10px;background:#FBFCFD;color:var(--ink)}
+textarea,input.line{width:100%}textarea{resize:vertical;display:block}
+input.line.short{max-width:280px;display:block}
+label.n{display:block;margin:8px 0 2px}
+input.cell{width:90px;text-align:center;font-family:var(--mono)}
+table.grid{border-collapse:collapse;width:100%;margin:8px 0}
+table.grid.narrow{width:auto;min-width:300px}
+table.grid th{background:var(--navy9);color:#fff;padding:7px 12px;font-size:14px;text-align:center}
+table.grid td{border:1px solid var(--line);padding:6px 12px;text-align:center}
+table.grid.left td,table.grid.left th{text-align:left}
+table.grid td.rowh{font-weight:700;color:var(--navy7);text-align:left}
+table.grid.left td input[type=radio]{display:block;margin:0 auto;width:20px;height:20px}
+.opts{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.opts label{display:flex;align-items:center;gap:8px;border:1.5px solid var(--frame);border-radius:10px;padding:8px 14px;cursor:pointer;background:#fff}
+.opts label:has(input:checked){border-color:var(--navy5);background:var(--navy1)}
+.opts input{width:18px;height:18px}
+.opts.gates{flex-direction:column}.opts.gates svg{width:min(300px,70vw);height:auto}
+svg text{font:14px Arial,sans-serif;fill:var(--navy9)}
+svg.fc{display:block;width:min(560px,100%);height:auto;margin:6px 0 10px}
+.codefill,pre.listing{font-family:var(--mono);font-size:14px;line-height:2.2;white-space:pre;overflow-x:auto;background:#F4F6F9;border:1px solid var(--line);border-left:4px solid var(--navy5);border-radius:8px;padding:10px 14px;margin:8px 0}
+pre.listing{line-height:1.6}pre.listing b{color:var(--muted);font-weight:400;user-select:none}
+input.blank{font-family:var(--mono);font-size:14px;padding:3px 8px;border:2px solid var(--navy5);background:#fff}
+.blank.w1{width:9ch}.blank.w3{width:34ch}.blank.w4{width:min(46ch,60vw)}
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:10px 0 4px}
+.flow span{border:1.6px solid var(--navy9);background:#fff;padding:7px 18px;max-width:300px;text-align:center;font-size:15px}
+.flow .term{border-radius:999px;padding:5px 30px}.flow .io{transform:skewX(-14deg)}.flow .io b{display:block;transform:skewX(14deg);font-weight:400}
+.flow i{width:0;height:22px;border-left:1.6px solid var(--navy9);position:relative}
+.flow i::after{content:"";position:absolute;left:-5.4px;bottom:0;border:5px solid transparent;border-top-color:var(--navy9);border-bottom:0}
+.data{display:flex;flex-wrap:wrap;margin:8px 0 2px}.data span{border:1px solid var(--navy9);padding:6px 14px;font-family:var(--mono);margin:0 -1px -1px 0;background:#fff}
+.pairs{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;align-items:center}
+.given span{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold7)}
+.given pre{margin-top:2px}
+.CodeMirror{height:auto;border:1px solid var(--frame);border-radius:8px;font-family:var(--mono);font-size:14px;line-height:1.5}
+.CodeMirror-scroll{min-height:inherit}
+.endpaper{text-align:center;font-weight:700;letter-spacing:.06em;margin:26px 0}
+body.locked #paper input:disabled,body.locked #paper textarea:disabled{background:#EEF1F5;color:var(--ink);opacity:1}
+body.locked .CodeMirror{background:#EEF1F5}body.locked .flag{display:none}
+
+/* after submission */
+#after .card{border-top:6px solid var(--gold5)}
+.relrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+#relCode{min-width:240px;text-transform:uppercase}
+#total{font:400 54px/1 Georgia,serif;color:var(--navy9)}#total small{font:700 18px system-ui,sans-serif;color:var(--muted);margin-left:12px}
+#breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 22px;margin:16px 0}
+#breakdown div{position:relative;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:4px 0 7px}
+#breakdown b{white-space:nowrap}
+#after{scroll-margin-top:70px}#after .card{margin-top:16px}
+section.q{overflow-x:auto}input.blank{max-width:100%}
+#breakdown i{position:absolute;left:0;bottom:-1px;height:3px;width:var(--w);background:var(--gold5)}
+#csstatus{color:var(--muted);font-size:14px}
+.mark{margin-top:12px;border:1px solid var(--gold3);background:#FFFBF2;border-radius:10px;padding:12px 14px}
+.mkhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold7)}
+.score{font:700 18px system-ui,sans-serif;letter-spacing:0;color:var(--navy9);background:#fff;border:1.5px solid var(--frame);border-radius:8px;padding:1px 10px}
+.score.full{border-color:var(--ok);color:var(--ok);background:var(--okbg)}
+.pts,.tests ul{list-style:none;margin:8px 0;padding:0}
+.pts li,.tests li{display:flex;gap:8px;padding:3px 0;align-items:flex-start}
+.ic{flex:none;width:22px;height:22px;border-radius:11px;text-align:center;line-height:22px;font-weight:700;font-size:13px;color:#fff}
+li.ok .ic{background:var(--ok)}li.no .ic{background:var(--bad)}
+li small{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+li.self label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}li.self input{width:20px;height:20px;flex:none;margin-top:2px}
+.tests{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:8px 0}
+p.tests{color:var(--muted)}.selfnote{font-weight:700;margin:8px 0 0}
+.guide{font-size:14px;color:var(--muted);margin:6px 0}
+details summary{cursor:pointer;font-weight:700;color:var(--navy5)}
+.query{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin-top:8px;cursor:pointer}
+#modal{position:fixed;inset:0;z-index:100;background:rgba(10,27,46,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+#modal .card{max-width:520px;margin:0}
+#modal .relrow{justify-content:flex-end;margin-top:16px}
+footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
+@media (max-width:600px){.pairs{grid-template-columns:1fr}section.q{padding:16px 14px}}
+@media print{#bar,#after,.flag{display:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="kicker">OCR GCSE (9–1) Computer Science · Interactive paper</div>
+  <h1 id="ptitle">Exam paper</h1><p id="psub"></p>
+</div></header>
+
+<main id="gate" class="wrap" hidden>
+  <div class="card">
+    <h2>Before you start</h2>
+    <ul class="facts" id="pfacts"></ul>
+    <ul class="facts">
+      <li>The timer starts when you press <b>Start the paper</b> and keeps running, even if you close this page.</li>
+      <li>When the time runs out the paper locks and is submitted automatically.</li>
+      <li>Your work saves automatically on this device. Programming answers must be written in <b>C#</b>.</li>
+    </ul>
+    <div class="idrow">
+      <label>Your name<input id="stuName" autocomplete="off"></label>
+      <label>Class<input id="stuClass" autocomplete="off"></label>
+      <label>Start code<input id="startCode" autocomplete="off" spellcheck="false"></label>
+    </div>
+    <button class="btn gold" id="begin" type="button">Start the paper</button>
+    <p class="msg" id="gatemsg" role="alert"></p>
+  </div>
+</main>
+
+<div id="bar" hidden>
+  <div class="wrap">
+    <span id="timer" role="timer" aria-label="Time remaining">--:--</span>
+    <span id="advice"></span><span class="grow"></span>
+    <span id="who"></span><span id="progress"></span>
+    <button id="navbtn" type="button">Questions</button>
+    <button id="finish" type="button">Finish and submit</button>
+  </div>
+  <div id="nav" hidden><div class="wrap"><div id="navlist"></div><p class="key">Filled = answered · gold ring = flagged</p></div></div>
+</div>
+
+<div id="exam" class="wrap" hidden>
+  <div id="after" hidden>
+    <div class="card">
+      <h2>Paper submitted</h2>
+      <p id="subinfo"></p>
+      <div id="release">
+        <p>When your teacher gives you the <b>release code</b>, enter it here to mark your paper.</p>
+        <div class="relrow"><input id="relCode" autocomplete="off" spellcheck="false" aria-label="Release code"><button class="btn" id="relbtn" type="button">Mark my paper</button></div>
+        <p class="msg" id="relmsg" role="alert"></p>
+      </div>
+      <div id="results" hidden>
+        <div id="total"></div>
+        <div id="breakdown"></div>
+        <p>Scroll down to see the mark scheme under each question. Tick the points you earned on the questions you mark yourself, then download your report and hand it in on Teams.</p>
+        <div class="relrow"><button class="btn gold" id="dl" type="button">Download my report</button><button class="btn ghost" id="print" type="button">Print or save as PDF</button><button class="btn ghost" id="rerun" type="button">Run the unit tests again</button><span id="csstatus" role="status"></span></div>
+      </div>
+    </div>
+  </div>
+  <div id="paper"></div>
+  <footer>Based on the OCR GCSE (9–1) Computer Science J277/02 sample question paper and mark scheme, © OCR. Code questions adapted to C# for classroom use.</footer>
+</div>
+
+<div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalh"><div class="card">
+  <h2 id="modalh">Submit your paper?</h2><p id="modaltext"></p>
+  <div class="relrow"><button class="btn ghost" id="cancel" type="button">Keep working</button><button class="btn gold" id="confirm" type="button">Submit paper</button></div>
+</div></div>
+
+<script src="data.js"></script>
+<script src="vendor/codemirror/codemirror.bundle.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
