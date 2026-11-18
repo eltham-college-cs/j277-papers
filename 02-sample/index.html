@@ -130,9 +130,11 @@ p.tests{color:var(--muted)}.selfnote{font-weight:700;margin:8px 0 0}
 .guide{font-size:14px;color:var(--muted);margin:6px 0}
 details summary{cursor:pointer;font-weight:700;color:var(--navy5)}
 .query{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin-top:8px;cursor:pointer}
-#modal{position:fixed;inset:0;z-index:100;background:rgba(10,27,46,.6);display:flex;align-items:center;justify-content:center;padding:16px}
-#modal .card{max-width:520px;margin:0}
-#modal .relrow{justify-content:flex-end;margin-top:16px}
+#modal,.modal{position:fixed;inset:0;z-index:100;background:rgba(10,27,46,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+#modal .card,.modal .card{max-width:520px;margin:0}
+.againrow{border-top:1px solid var(--line);margin:16px 0 0;padding-top:12px;color:var(--muted)}
+#gatenote{color:var(--muted);margin:6px 0 0}
+#modal .relrow,.modal .relrow{justify-content:flex-end;margin-top:16px}
 footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
 @media (max-width:600px){.pairs{grid-template-columns:1fr}section.q{padding:16px 14px}}
 @media print{#bar,#after,.flag{display:none}}
@@ -160,6 +162,7 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
     </div>
     <button class="btn gold" id="begin" type="button">Start the paper</button>
     <p class="msg" id="gatemsg" role="alert"></p>
+    <p id="gatenote"></p>
   </div>
 </main>
 
@@ -189,6 +192,7 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
         <div id="breakdown"></div>
         <p>Scroll down to see the mark scheme under each question. Tick the points you earned on the questions you mark yourself, then download your report and hand it in on Teams.</p>
         <div class="relrow"><button class="btn gold" id="dl" type="button">Download my report</button><button class="btn ghost" id="print" type="button">Print or save as PDF</button><button class="btn ghost" id="rerun" type="button">Run the unit tests again</button><span id="csstatus" role="status"></span></div>
+        <p class="againrow">Want another go? <button class="btn ghost" id="again" type="button">Start a new attempt</button></p>
       </div>
     </div>
   </div>
@@ -199,6 +203,11 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
 <div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalh"><div class="card">
   <h2 id="modalh">Submit your paper?</h2><p id="modaltext"></p>
   <div class="relrow"><button class="btn ghost" id="cancel" type="button">Keep working</button><button class="btn gold" id="confirm" type="button">Submit paper</button></div>
+</div></div>
+
+<div id="againmodal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="againh"><div class="card">
+  <h2 id="againh">Start a new attempt?</h2><p><b>Download your report first.</b> Starting again clears your answers and marks for this attempt from this device. Your earlier mark is kept on your next report. You will need the start code, and the timer starts again from the full time.</p>
+  <div class="relrow"><button class="btn ghost" id="againcancel" type="button">Go back</button><button class="btn gold" id="againconfirm" type="button">Clear and start again</button></div>
 </div></div>
 
 <script src="data.js"></script>

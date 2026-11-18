@@ -314,16 +314,24 @@ body{font:14px/1.45 Arial,sans-serif;color:#1A1D21;max-width:1000px;margin:24px 
 .big{font:400 40px Georgia,serif;color:#0A1B2E}table{border-collapse:collapse;width:100%}th{background:#0A1B2E;color:#fff;text-align:left;padding:6px 8px;font-size:12px}td{border-bottom:1px solid #E3E8EF;padding:6px 8px;vertical-align:top}td.n{white-space:nowrap;font-weight:700}
 pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #E3E8EF;border-radius:6px;padding:6px 8px;margin:2px 0;white-space:pre-wrap}.a{display:inline-block;background:#F7F8FA;border:1px solid #E3E8EF;border-radius:4px;padding:0 5px;margin:1px}.q{color:#B3261E;font-size:11px}.note{color:#555D68;font-size:12px}
 </style></head><body><div class="top"><h1>${esc(P.title)}</h1><div>${esc(P.subtitle)} · completion report</div></div>
-<div class="kv"><div><b>Name</b>${esc(S.name)}</div><div><b>Class</b>${esc(S.cls)}</div><div><b>Date</b>${d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div><div><b>Started</b>${hhmm(S.startedAt)}</div><div><b>Submitted</b>${hhmm(S.submittedAt)} (${S.how === "time" ? "time ran out" : "by student"})</div><div><b>Time used</b>${used} of ${S.durationMin} minutes${S.extra ? " (extra time)" : ""}</div></div>
+<div class="kv"><div><b>Name</b>${esc(S.name)}</div><div><b>Class</b>${esc(S.cls)}</div><div><b>Attempt</b>${S.attempt || 1}</div><div><b>Date</b>${d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div><div><b>Started</b>${hhmm(S.startedAt)}</div><div><b>Submitted</b>${hhmm(S.submittedAt)} (${S.how === "time" ? "time ran out" : "by student"})</div><div><b>Time used</b>${used} of ${S.durationMin} minutes${S.extra ? " (extra time)" : ""}</div></div>
 <h2>Result</h2><div class="big">${tot.all} / ${P.total} <span style="font-size:20px">(${Math.round((tot.all / P.total) * 100)}%)</span></div>
 <table><tr><th>Area</th><th>Marks</th></tr><tr><td>Section A</td><td class="n">${tot.A} / ${tot.Amax}</td></tr><tr><td>Section B</td><td class="n">${tot.B} / ${tot.Bmax}</td></tr>${Object.keys(tot.spec).sort().map((k) => `<tr><td>${names[k] || k}</td><td class="n">${tot.spec[k].got} / ${tot.spec[k].max}</td></tr>`).join("")}</table>
-<h2>Question by question</h2><table><tr><th>Question</th><th>Spec</th><th>Mark</th><th>How marked</th><th>Answer</th></tr>${rows}</table>
+${(S.history || []).length ? `<h2>Earlier attempts</h2><table><tr><th>Attempt</th><th>Date</th><th>Started</th><th>Submitted</th><th>Mark</th></tr>${S.history.map((h) => `<tr><td>${h.attempt}</td><td>${new Date(h.startedAt).toLocaleDateString("en-GB")}</td><td>${hhmm(h.startedAt)}</td><td>${hhmm(h.submittedAt)}</td><td class="n">${h.score == null ? "not marked" : h.score + " / " + h.total}</td></tr>`).join("")}</table>` : ""}<h2>Question by question</h2><table><tr><th>Question</th><th>Spec</th><th>Mark</th><th>How marked</th><th>Answer</th></tr>${rows}</table>
 <p class="note">Self-marked questions were marked by the student against the OCR mark scheme. Report generated ${new Date().toLocaleString("en-GB")}.</p></body></html>`;
   }
   function download() {
     const blob = new Blob([buildReport()], { type: "text/html" }), a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = `${P.id}-${(S.name || "report").trim().replace(/[^a-z0-9]+/gi, "-")}.html`;
+    a.href = URL.createObjectURL(blob); a.download = `${P.id}-${(S.name || "report").trim().replace(/[^a-z0-9]+/gi, "-")}${(S.attempt || 1) > 1 ? "-attempt-" + S.attempt : ""}.html`;
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  /* ---------- new attempt ---------- */
+  function newAttempt() {
+    const score = M ? renderAllMarks().tot.all : null;
+    const history = (S.history || []).concat([{ attempt: S.attempt || 1, score, total: P.total, startedAt: S.startedAt, submittedAt: S.submittedAt }]);
+    S = { name: S.name, cls: S.cls, attempt: (S.attempt || 1) + 1, history, answers: {}, flags: {}, self: {}, query: {}, tests: {} };
+    saveNow(); location.reload();
   }
 
   /* ---------- screens ---------- */
@@ -333,7 +341,7 @@ pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #
   }
   function showExam() {
     $("#gate").hidden = true; $("#exam").hidden = false; $("#bar").hidden = false;
-    $("#who").textContent = `${S.name} · ${S.cls}`;
+    $("#who").textContent = `${S.name} · ${S.cls}${(S.attempt || 1) > 1 ? " · Attempt " + S.attempt : ""}`;
     buildPaper();
     if (!S.submittedAt && Date.now() >= endsAt()) submit("time");
     if (S.submittedAt) { lock(); if (S.release) tryRelease(S.release, true); } else startClock();
@@ -345,7 +353,7 @@ pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #
     $("#begin").disabled = true; msg.textContent = "Checking…";
     START = await openStart(code); $("#begin").disabled = false;
     if (!START) { msg.textContent = "That start code is not right."; return; }
-    S = { name, cls, code: normCode(code), startedAt: Date.now(), durationMin: START.durationMin, extra: START.extra, answers: {}, flags: {}, self: {}, query: {}, tests: {} };
+    S = { name, cls, code: normCode(code), startedAt: Date.now(), durationMin: START.durationMin, extra: START.extra, attempt: S.attempt || 1, history: S.history || [], answers: {}, flags: {}, self: {}, query: {}, tests: {} };
     saveNow(); showExam(); window.scrollTo(0, 0);
   }
   async function init() {
@@ -365,8 +373,13 @@ pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #
     $("#relCode").addEventListener("keydown", (e) => { if (e.key === "Enter") tryRelease($("#relCode").value); });
     $("#rerun").addEventListener("click", () => runAllTests(true));
     $("#dl").addEventListener("click", download);
+    $("#again").addEventListener("click", () => { $("#againmodal").hidden = false; $("#againcancel").focus(); });
+    $("#againcancel").addEventListener("click", () => { $("#againmodal").hidden = true; });
+    $("#againconfirm").addEventListener("click", newAttempt);
     $("#print").addEventListener("click", () => { const w = window.open("", "_blank"); if (w) { w.document.write(buildReport()); w.document.close(); w.focus(); w.print(); } });
     if (S.code && S.startedAt) { START = await openStart(S.code); if (START) { showExam(); return; } }
+    if (S.name) { $("#stuName").value = S.name; $("#stuClass").value = S.cls || ""; }
+    if ((S.attempt || 1) > 1) $("#gatenote").textContent = `This will be attempt ${S.attempt}. Enter the start code to begin; the timer starts again from the full time.`;
     $("#gate").hidden = false;
   }
   init();
