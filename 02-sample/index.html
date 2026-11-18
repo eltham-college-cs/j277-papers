@@ -133,6 +133,8 @@ details summary{cursor:pointer;font-weight:700;color:var(--navy5)}
 #modal,.modal{position:fixed;inset:0;z-index:100;background:rgba(10,27,46,.6);display:flex;align-items:center;justify-content:center;padding:16px}
 #modal .card,.modal .card{max-width:520px;margin:0}
 .againrow{border-top:1px solid var(--line);margin:16px 0 0;padding-top:12px;color:var(--muted)}
+#pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.pickcard{display:block;border:2px solid var(--navy5);border-radius:12px;padding:16px 18px;color:var(--navy9);text-decoration:none}.pickcard b{display:block;font:400 26px Georgia,serif}.pickcard span{color:var(--muted)}.pickcard:hover,.pickcard:focus-visible{background:var(--navy1)}
 #gatenote{color:var(--muted);margin:6px 0 0}
 #modal .relrow,.modal .relrow{justify-content:flex-end;margin-top:16px}
 footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
@@ -145,6 +147,10 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
   <div class="kicker">OCR GCSE (9–1) Computer Science · Interactive paper</div>
   <h1 id="ptitle">Exam paper</h1><p id="psub"></p>
 </div></header>
+
+<main id="chooser" class="wrap" hidden>
+  <div class="card"><h2>Choose your section</h2><p>This paper is set as two homeworks. Do the section your teacher has set. Each section has its own timer and start code.</p><div id="pick"></div></div>
+</main>
 
 <main id="gate" class="wrap" hidden>
   <div class="card">

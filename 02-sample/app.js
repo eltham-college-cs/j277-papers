@@ -1,7 +1,14 @@
 /* Interactive exam paper engine. Questions and mark scheme arrive encrypted in data.js. */
 (() => {
   "use strict";
-  const P = window.PAPER, KEY = "exam:" + P.id;
+  const ALL = window.PAPER, SEC = (new URLSearchParams(location.search).get("section") || "").toUpperCase();
+  const P = ALL.papers[SEC];
+  if (!P) {                                        // no section chosen: show the chooser
+    document.getElementById("ptitle").textContent = ALL.title; document.getElementById("psub").textContent = ALL.subtitle; document.title = ALL.title;
+    document.getElementById("pick").innerHTML = Object.values(ALL.papers).map((x) => `<a class="pickcard" href="?section=${x.section.toLowerCase()}"><b>Section ${x.section}</b><span>${x.total} marks · ${x.durationMin} minutes</span></a>`).join("");
+    document.getElementById("chooser").hidden = false; return;
+  }
+  const KEY = "exam:" + P.id;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -48,8 +55,6 @@
       t.textContent = fmtLeft(left);
       bar.classList.toggle("warn", left <= 10 * 60000 && left > 5 * 60000);
       bar.classList.toggle("crit", left <= 5 * 60000);
-      const used = (Date.now() - S.startedAt) / 60000;
-      $("#advice").textContent = S.extra ? "" : used < 50 ? "Section A: about 50 minutes" : "You should now be on Section B";
       if (left <= 0) submit("time");
     };
     step(); tick = setInterval(step, 500);
@@ -215,8 +220,7 @@
     const names = { "2.1": "2.1 Algorithms", "2.2": "2.2 Programming fundamentals", "2.3": "2.3 Producing robust programs", "2.4": "2.4 Boolean logic", "2.5": "2.5 Languages and IDEs" };
     $("#results").hidden = false; $("#release").hidden = true;
     $("#total").innerHTML = `<b>${tot.all}</b> / ${P.total}<small>${Math.round((tot.all / P.total) * 100)}%</small>`;
-    $("#breakdown").innerHTML = `<div><span>Section A</span><b>${tot.A} / ${tot.Amax}</b></div><div><span>Section B</span><b>${tot.B} / ${tot.Bmax}</b></div>` +
-      Object.keys(tot.spec).sort().map((k) => `<div><span>${names[k] || k}</span><b>${tot.spec[k].got} / ${tot.spec[k].max}</b><i style="--w:${Math.round((tot.spec[k].got / tot.spec[k].max) * 100)}%"></i></div>`).join("");
+    $("#breakdown").innerHTML =       Object.keys(tot.spec).sort().map((k) => `<div><span>${names[k] || k}</span><b>${tot.spec[k].got} / ${tot.spec[k].max}</b><i style="--w:${Math.round((tot.spec[k].got / tot.spec[k].max) * 100)}%"></i></div>`).join("");
     return { tot, per, names };
   }
   document.addEventListener("change", (e) => {
@@ -316,7 +320,7 @@ pre{font:12px/1.4 Menlo,Consolas,monospace;background:#F7F8FA;border:1px solid #
 </style></head><body><div class="top"><h1>${esc(P.title)}</h1><div>${esc(P.subtitle)} · completion report</div></div>
 <div class="kv"><div><b>Name</b>${esc(S.name)}</div><div><b>Class</b>${esc(S.cls)}</div><div><b>Attempt</b>${S.attempt || 1}</div><div><b>Date</b>${d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div><div><b>Started</b>${hhmm(S.startedAt)}</div><div><b>Submitted</b>${hhmm(S.submittedAt)} (${S.how === "time" ? "time ran out" : "by student"})</div><div><b>Time used</b>${used} of ${S.durationMin} minutes${S.extra ? " (extra time)" : ""}</div></div>
 <h2>Result</h2><div class="big">${tot.all} / ${P.total} <span style="font-size:20px">(${Math.round((tot.all / P.total) * 100)}%)</span></div>
-<table><tr><th>Area</th><th>Marks</th></tr><tr><td>Section A</td><td class="n">${tot.A} / ${tot.Amax}</td></tr><tr><td>Section B</td><td class="n">${tot.B} / ${tot.Bmax}</td></tr>${Object.keys(tot.spec).sort().map((k) => `<tr><td>${names[k] || k}</td><td class="n">${tot.spec[k].got} / ${tot.spec[k].max}</td></tr>`).join("")}</table>
+<table><tr><th>Area</th><th>Marks</th></tr>${Object.keys(tot.spec).sort().map((k) => `<tr><td>${names[k] || k}</td><td class="n">${tot.spec[k].got} / ${tot.spec[k].max}</td></tr>`).join("")}</table>
 ${(S.history || []).length ? `<h2>Earlier attempts</h2><table><tr><th>Attempt</th><th>Date</th><th>Started</th><th>Submitted</th><th>Mark</th></tr>${S.history.map((h) => `<tr><td>${h.attempt}</td><td>${new Date(h.startedAt).toLocaleDateString("en-GB")}</td><td>${hhmm(h.startedAt)}</td><td>${hhmm(h.submittedAt)}</td><td class="n">${h.score == null ? "not marked" : h.score + " / " + h.total}</td></tr>`).join("")}</table>` : ""}<h2>Question by question</h2><table><tr><th>Question</th><th>Spec</th><th>Mark</th><th>How marked</th><th>Answer</th></tr>${rows}</table>
 <p class="note">Self-marked questions were marked by the student against the OCR mark scheme. Report generated ${new Date().toLocaleString("en-GB")}.</p></body></html>`;
   }
@@ -357,8 +361,8 @@ ${(S.history || []).length ? `<h2>Earlier attempts</h2><table><tr><th>Attempt</t
     saveNow(); showExam(); window.scrollTo(0, 0);
   }
   async function init() {
-    $("#ptitle").textContent = P.title; $("#psub").textContent = P.subtitle; document.title = P.title;
-    $("#pfacts").innerHTML = `<li>Time allowed: <b>${P.durationMin} minutes</b></li><li>Total marks: <b>${P.total}</b></li><li>Answer <b>all</b> the questions.</li><li>Do <b>not</b> use a calculator.</li>`;
+    $("#ptitle").textContent = P.title; $("#psub").textContent = P.subtitle; document.title = `${P.title} · Section ${P.section}`;
+    $("#pfacts").innerHTML = `<li>Time allowed: <b>${P.durationMin} minutes</b></li><li>Total marks: <b>${P.total}</b></li><li>Answer <b>all</b> the questions in this section.</li><li>Do <b>not</b> use a calculator.</li>`;
     $("#begin").addEventListener("click", begin);
     $("#startCode").addEventListener("keydown", (e) => { if (e.key === "Enter") begin(); });
     $("#navbtn").addEventListener("click", () => { const n = $("#nav"); n.hidden = !n.hidden; });
