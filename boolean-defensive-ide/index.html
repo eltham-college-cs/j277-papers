@@ -170,7 +170,7 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
     <div class="relrow"><button class="btn gold" id="dl" type="button">Download my answers (PDF)</button><button class="btn ghost" id="again" type="button">Start a new attempt</button></div>
     <p class="msg" id="dlmsg" role="alert"></p>
   </div>
-  <footer>Questions from OCR GCSE (9–1) Computer Science J277 assessment materials, © OCR. Interactive version for classroom revision.</footer>
+  <footer id="credit">Questions from OCR GCSE (9–1) Computer Science J277 assessment materials, © OCR. Interactive version for classroom revision.</footer>
 </div>
 
 <div id="againmodal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="againh"><div class="card">
@@ -181,7 +181,7 @@ footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
 <script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
 <script src="logic-builder.js"></script>
-<script src="questions.js"></script>
+<script>(function(){var n=new URLSearchParams(location.search).get("paper");document.write('<script src="questions'+(n==="2"?"-2":"")+'.js"><\/script>');})();</script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -224,6 +224,7 @@ ${full ? "" : `<p class="small">${esc(r.note || "")} Change your answer and chec
 
   /* ---------- start ---------- */
   document.title = P.title + " · revision paper";
+  if (P.credit) $("#credit").textContent = P.credit;
   $("#ptitle").textContent = P.title; $("#psub").textContent = P.subtitle;
   $("#stuName").value = S.name || ""; $("#stuClass").value = S.cls || "";
   $("#stuName").addEventListener("input", (e) => { S.name = e.target.value; $("#dlmsg").textContent = ""; save(); });
