@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Revision paper</title>
+<style>
+:root{--navy9:#0A1B2E;--navy7:#163351;--navy5:#2A5A8C;--navy1:#D7E3EF;--gold5:#C89B3C;--gold3:#E3C783;--gold7:#8A6520;--paper:#F7F8FA;--ink:#1A1D21;--muted:#555D68;--line:#E3E8EF;--frame:#B9C3CF;--ok:#1F7A4D;--okbg:#E6F4EC;--bad:#B3261E;--badbg:#FCE9E7;--warn:#8A5A00;--warnbg:#FDF1D9;--mono:Menlo,Consolas,"Liberation Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:Georgia,serif;color:var(--navy9);font-weight:400;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+header.top{background:var(--navy9);color:#fff;padding:22px 0 24px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--gold3);text-transform:uppercase}
+header.top h1{color:#fff;font-size:clamp(26px,4.4vw,40px);margin:6px 0 6px;line-height:1.15}
+header.top p{color:var(--navy1);margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:#EEF2F7;border-radius:4px;padding:1px 5px}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:22px 0}
+.card h2{font-size:26px;margin-bottom:10px}
+.idrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0 4px}
+.idrow label,label.n{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--gold7);text-transform:uppercase}
+.idrow input{display:block;width:100%;margin-top:4px}
+.facts{margin:0 0 6px;padding-left:20px}
+.msg{color:var(--bad);font-weight:700;min-height:1.5em;margin:8px 0 0}
+button.btn{font:inherit;font-weight:700;border-radius:8px;padding:9px 18px;cursor:pointer;border:1px solid var(--navy9);background:var(--navy9);color:#fff}
+button.btn.ghost{background:#fff;color:var(--navy9)}
+button.btn.gold{background:var(--gold5);border-color:var(--gold5);color:var(--navy9)}
+button.btn:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible,svg:focus-visible{outline:3px solid var(--gold5);outline-offset:2px}
+
+/* sticky bar */
+#bar{position:sticky;top:0;z-index:50;background:var(--navy7);color:#fff;border-bottom:3px solid var(--gold5)}
+#bar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:8px;padding-bottom:8px}
+#score{font:700 18px/1 var(--mono);font-variant-numeric:tabular-nums}
+#scorelab,#progress{font-size:14px;color:var(--navy1)}
+#bar .grow{flex:1}
+#bar button{font:inherit;font-size:14px;font-weight:700;border-radius:8px;padding:6px 12px;cursor:pointer;border:1px solid var(--gold3);background:transparent;color:#fff}
+#bar #dlbar{background:var(--gold5);border-color:var(--gold5);color:var(--navy9)}
+#nav{background:var(--navy9);padding:10px 0}
+#navlist{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px;cursor:pointer;border:1.5px solid var(--navy5);background:var(--navy7);color:var(--navy1)}
+.chip.done{background:var(--navy1);color:var(--navy9);border-color:var(--navy1)}
+.chip.full{background:#BFE5CF;border-color:#BFE5CF;color:#0E4429}
+.chip.teacher{border-style:dashed}
+.key{font-size:12px;color:var(--navy1);margin:8px 0 0}
+
+/* paper */
+section.q{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:20px;overflow-x:auto}
+section.q>header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+section.q>header h2{font-size:24px}
+.num{flex:none;min-width:32px;height:32px;border-radius:16px;background:var(--gold5);color:var(--navy9);text-align:center;line-height:32px;font-weight:700;padding:0 6px}
+.qmarks{margin-left:auto;font-weight:700;color:var(--navy9);background:var(--warnbg);border:1px solid var(--gold3);border-radius:999px;padding:2px 12px;font-size:14px;white-space:nowrap}
+.part{border-top:1px solid var(--line);margin-top:16px;padding-top:12px;scroll-margin-top:70px}
+.phead{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:2px}
+.plabel{font-weight:700;color:var(--navy9);background:var(--navy1);border-radius:6px;padding:1px 8px}
+.pmarks{font-weight:700;color:var(--navy9)}
+.badge{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 10px;border:1px solid var(--frame);color:var(--muted);background:#fff}
+.badge.auto{border-color:var(--navy5);color:var(--navy5)}
+.stem p,.prompt p{margin:8px 0}
+.prompt{font-weight:500}
+textarea,input.line,input.cell,input.blank,.idrow input{font:inherit;border:1px solid var(--frame);border-radius:8px;padding:7px 10px;background:#FBFCFD;color:var(--ink)}
+textarea,input.line{width:100%}textarea{resize:vertical;display:block}
+textarea.mono,input.mono{font-family:var(--mono);font-size:14px}
+input.line.short{max-width:280px;display:block}
+label.n{display:block;margin:8px 0 2px}
+input.cell{width:100%;min-width:110px;text-align:center;font-family:var(--mono)}
+table.grid{border-collapse:collapse;width:100%;margin:8px 0}
+table.grid.narrow{width:auto;min-width:300px}
+table.grid caption{caption-side:top;text-align:left;font-family:var(--mono);font-weight:700;color:var(--navy7);padding-bottom:4px}
+table.grid th{background:var(--navy9);color:#fff;padding:7px 12px;font-size:14px;text-align:center}
+table.grid td{border:1px solid var(--line);padding:6px 12px;text-align:center}
+table.grid td.rowh{font-weight:700;color:var(--navy7);text-align:left}
+table.grid td input[type=radio],table.grid td input[type=checkbox]{display:block;margin:0 auto;width:20px;height:20px;accent-color:var(--navy5)}
+table.grid tr.good td.rowh{box-shadow:inset 4px 0 0 var(--ok)}table.grid tr.bad td.rowh{box-shadow:inset 4px 0 0 var(--bad)}
+svg.fc{display:block;width:min(420px,100%);height:auto;margin:6px auto 10px}
+.codefill,pre.listing{font-family:var(--mono);font-size:14px;line-height:2.4;white-space:pre;overflow-x:auto;background:#F4F6F9;border:1px solid var(--line);border-left:4px solid var(--navy5);border-radius:8px;padding:10px 14px;margin:8px 0}
+pre.listing{line-height:1.6}
+input.blank{font-family:var(--mono);font-size:14px;padding:3px 8px;border:2px solid var(--navy5);background:#fff;max-width:100%}
+.good:is(input,textarea){border-color:var(--ok)!important;background:var(--okbg)!important}
+.bad:is(input,textarea){border-color:var(--bad)!important;background:var(--badbg)!important}
+
+/* checking */
+.checkrow{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin-top:12px}
+.tnote{margin:10px 0 0;font-size:14px;color:var(--muted)}
+.fb{flex:1;min-width:240px;border-radius:10px;padding:8px 14px;font-size:15px}
+.fb.ok{background:var(--okbg);border:1px solid #9FD3B6;color:#0E4429}
+.fb.part{background:var(--warnbg);border:1px solid var(--gold3);color:#4A3200}
+.fb.warn{background:var(--badbg);border:1px solid #F0B8B3;color:#7A1712}
+.fb b.score{font-size:16px}
+.fb ul{list-style:none;margin:6px 0 2px;padding:0}
+.fb li{padding-left:24px;position:relative}
+.fb li::before{position:absolute;left:0;font-weight:700}
+.fb li.y::before{content:"\2713";color:var(--ok)}.fb li.x::before{content:"\2717";color:var(--bad)}
+.fb .small{font-size:13.5px;opacity:.85;margin:4px 0 0}
+
+/* logic builder */
+.lb{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;margin-top:8px}
+.lbtools,.lbtest{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lbtools .grow{flex:1}
+.lblab{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--gold7);text-transform:uppercase}
+.lbadd{display:flex;align-items:center;gap:6px;font:inherit;font-weight:700;font-size:14px;border:1.5px solid var(--navy5);background:#fff;color:var(--navy9);border-radius:10px;padding:4px 12px 4px 8px;cursor:pointer}
+.lbadd svg{width:44px;height:30px}
+.lbadd:hover{background:var(--navy1)}
+.lbbtn,.lbtog{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--frame);background:#fff;color:var(--navy9);border-radius:8px;padding:5px 12px;cursor:pointer}
+.lbtog{font-family:var(--mono);min-width:70px}
+.lbtog.on{background:var(--okbg);border-color:var(--ok);color:#0E4429}
+.lbsvg{display:block;width:100%;height:auto;margin:8px 0 4px;touch-action:none;user-select:none;-webkit-user-select:none}
+.lbhint{margin:0 0 8px;font-size:13.5px;color:var(--muted);min-height:1.5em}
+.lbsw{display:flex;gap:6px;flex-wrap:wrap}
+.lbout{font-family:var(--mono);font-weight:700;border-radius:8px;padding:5px 12px;background:#EEF2F7}
+.lbout.on{background:var(--okbg);color:#0E4429}
+.lbkey{font-size:13px;color:var(--muted)}
+
+.endpaper{text-align:center;font-weight:700;letter-spacing:.06em;margin:26px 0}
+#done.card{border-top:6px solid var(--gold5)}
+.relrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+#total{font:400 44px/1.1 Georgia,serif;color:var(--navy9)}#total small{font:700 16px system-ui,sans-serif;color:var(--muted);margin-left:12px}
+footer{color:var(--muted);font-size:13px;padding:20px 0 60px}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(10,27,46,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .card{max-width:520px;margin:0}
+.modal .relrow{justify-content:flex-end;margin-top:16px}
+@media (max-width:560px){section.q{padding:16px 14px}.card{padding:18px 16px}.badge{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="kicker">OCR GCSE (9–1) Computer Science · Interactive revision paper</div>
+  <h1 id="ptitle">Revision paper</h1><p id="psub"></p>
+</div></header>
+
+<main class="wrap">
+  <div class="card">
+    <h2>Before you start</h2>
+    <ul class="facts">
+      <li>Every question shows how many marks it is worth. Answer all of the questions.</li>
+      <li>Questions marked <b>Auto-checked</b> have a <b>Check my answer</b> button. It tells you how many marks you have earned, not the answer, so you can try again.</li>
+      <li>Questions marked <b>Teacher assessed</b> are marked by your teacher from your PDF.</li>
+      <li>Your work saves automatically on this device. When you finish, download your PDF and hand it in.</li>
+    </ul>
+    <div class="idrow">
+      <label>Your name<input id="stuName" autocomplete="off"></label>
+      <label>Class<input id="stuClass" autocomplete="off"></label>
+    </div>
+  </div>
+</main>
+
+<div id="bar">
+  <div class="wrap">
+    <span id="scorelab">Auto-checked marks</span><span id="score">0 / 0</span>
+    <span class="grow"></span>
+    <span id="progress"></span>
+    <button id="navbtn" type="button" aria-expanded="false">Questions</button>
+    <button id="dlbar" type="button">Download PDF</button>
+  </div>
+  <div id="nav" hidden><div class="wrap"><div id="navlist"></div><p class="key">Filled = answered · green = full marks on an auto-checked question · dashed = teacher assessed</p></div></div>
+</div>
+
+<div class="wrap">
+  <div id="paper" style="margin-top:22px"></div>
+  <p class="endpaper">END OF QUESTION PAPER</p>
+  <div class="card" id="done">
+    <h2>Finished?</h2>
+    <div id="total"></div>
+    <p id="doneinfo"></p>
+    <p>Download a PDF of the questions with your answers and hand it in to your teacher. Auto-checked questions are marked in the PDF; your teacher marks the rest.</p>
+    <div class="relrow"><button class="btn gold" id="dl" type="button">Download my answers (PDF)</button><button class="btn ghost" id="again" type="button">Start a new attempt</button></div>
+    <p class="msg" id="dlmsg" role="alert"></p>
+  </div>
+  <footer>Questions from OCR GCSE (9–1) Computer Science J277 assessment materials, © OCR. Interactive version for classroom revision.</footer>
+</div>
+
+<div id="againmodal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="againh"><div class="card">
+  <h2 id="againh">Start a new attempt?</h2><p><b>Download your PDF first.</b> Starting again clears all of your answers and marks from this device.</p>
+  <div class="relrow"><button class="btn ghost" id="againcancel" type="button">Go back</button><button class="btn gold" id="againconfirm" type="button">Clear and start again</button></div>
+</div></div>
+
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
+<script src="logic-builder.js"></script>
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
